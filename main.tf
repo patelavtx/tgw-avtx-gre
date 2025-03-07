@@ -2,7 +2,7 @@
 
 module "mc-transit" {
   source  = "terraform-aviatrix-modules/mc-transit/aviatrix"
-  version = "2.2.1"
+  version = "2.5.4"
   # insert the 3 required variables here
   cloud           = var.cloud
   region          = var.region
