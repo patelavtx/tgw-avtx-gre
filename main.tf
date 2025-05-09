@@ -53,7 +53,8 @@ resource "aws_ec2_transit_gateway_connect" "attachment" {
 # In Aviatrix Transit Gateway VPC, create static route point TGW Cidr block to TGW
 
 resource "aws_route" "route_to_tgw_cidr_block" {
-  count = 2 # Constrain: Not able to retrieve route table ID specific for Aviatrix Transit GW LAN interface, this is a hack. Your actual number of route table may vary
+  count = 2 # Constrain: Not able to retrieve route table ID specific for Aviatrix Transit GW LAN interface, this is a hack. 
+  #Your actual number of route table may vary
 
   route_table_id         = module.mc-transit.vpc.route_tables[count.index]
   destination_cidr_block = var.aws_tgw_cidr_block
