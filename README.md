@@ -1,27 +1,37 @@
-# terraform-aviatrix-bgp-over-gre-between-new-tgw-avx-transit
+# TGW-BGPGRE-Aviatrix
 
 This module builds Aviatrix Transit Gateways and TGW in the same region, then peer them using BGP over GRE.
 
 Last tested on:
-- Terraform v1.2.8
-- AWS Provider 4.0
-- Aviatrix Provider: 2.23.0
-- Aviatrix Controller: 6.8.1149
+- Terraform v1.10.5
+- AWS Provider >= 4.0
+- Aviatrix Provider: ~> 3.1.0
+- Aviatrix Controller: 7.1.4191
 
-## Steps taken
+
+## NOTE
+- TGW VPC is for regional VPCs and works for 'cross account' through RAM shares.
+- Inter regional VPC connection would require TGW in that region and then 'peering connection' to the local TGW
+- Aviatrix GWs do not support multi peering from the same NIC (apart from Azure Route Server use case), therefore 4 connect peers used to provide redundancy.
+- AWS TGW Connect Peers offer two endpoints, (as point above the 2nd endpoint is not used, instead additional Peer is used)
+
+
+
+
+## Steps taken in Terraform.
 ![](20220913095913.png)  
 - Step A: Create Aviatrix Transit VPC and Transit Gateways, assign ASN
-- Step B: Create AWS TGW, assign CIDR (For GRE outer IPs), assign ASN
-- Step C: Create AWS TGW VPC Attachment to Aviatrix Transit VPC
-- Step D: Create AWS TGW Connect using VPC Attachment as transport
-- Step E: In Aviatrix Transit VPC, modify subnet Public-gateway-and-firewall-mgmt-1x route table, for TGW CIDR destination, point to TGW
-- Step F: In AWS TGW Connect, create 4 peers.
+- Step B: Create AWS TGW, assign CIDR <span style="color:orange">(For GRE outer IPs), assign BGP ASN</span>
+- Step C: <span style="color:orange">Create AWS TGW VPC Attachment to Aviatrix Transit VPC</span>
+- Step D: <span style="color:orange">Create AWS TGW Connect using VPC Attachment as transport</span>
+- Step E: <span style="color:orange">In Aviatrix Transit VPC, modify subnet Public-gateway-and-firewall-mgmt-1x route table, for TGW CIDR destination, point to TGW</span>
+- Step F: <span style="color:orange">In AWS TGW Connect, create 4 peers.</span>
     - First peer point to Aviatrix Primary Transit GW LAN IP as Peer GRE (outer address)
     - Second peer point to Aviatrix HA Transit GW LAN IP as Peer GRE (outer address)
     - Third peer point to Aviatrix Primary Transit GW LAN IP as Peer GRE (outer address)
     - Fourth peer point to Aviatrix HA Transit GW LAN IP as Peer GRE (outer address)
     - See below for inner address explaination
-- Step G: In Aviatrix Transit, create two external connections
+- Step G: <span style="color:orange">In Aviatrix Transit, create two external connections</span>
     - Do not use Enable Remote Gateway HA
     - Over Private Network is enabled
     - First connection use TGW Peer1 and Peer2's BGP address (192.168.1.x in this example) as Remote Gateway IP (Orange lines)
@@ -73,14 +83,3 @@ CoPilot Cloud Routes -> BGP Info shows inner IP configuration
 Notice each peer, second BGP peering is not been used
 ![](20220913100248.png)
 
-
-# Estimated cost
-```
- Name                                                             Monthly Qty  Unit            Monthly Cost
-
- aws_ec2_transit_gateway_vpc_attachment.tgw_to_avx_transit_vpc
- ├─ Transit gateway attachment                                            730  hours                 $36.50
- └─ Data processed                                              Monthly cost depends on usage: $0.02 per GB
-
- OVERALL TOTAL                                                                                       $36.50
- ```
